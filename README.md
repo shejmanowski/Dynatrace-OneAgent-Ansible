@@ -1,6 +1,6 @@
 # Dynatrace OneAgent Ansible collection
 
-Ansible collection for deploying Dynatrace OneAgent.
+AAnsible collection for deploying Dynatrace OneAgent.
 
 ## Description
 
