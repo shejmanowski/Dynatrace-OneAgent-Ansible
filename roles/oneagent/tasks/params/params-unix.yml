@@ -1,13 +1,25 @@
 ---
+- name: Determine effective user id
+  ansible.builtin.command: id -u
+  changed_when: false
+  check_mode: false
+  register: _oneagent_effective_uid
+
+- name: Validate that the role runs with root privileges
+  ansible.builtin.assert:
+    that: _oneagent_effective_uid.stdout == "0"
+    fail_msg: "{{ oneagent_root_privileges_required }}"
+    quiet: true
+
 - name: Validate installation directory name doesn't contains spaces
   ansible.builtin.fail:
     msg: "{{ oneagent_install_dir_contains_spaces }}"
-  when: oneagent_install_path|regex_search(" ")
+  when: "' ' in oneagent_install_path"
 
 - name: Validate download directory name doesn't contain spaces
   ansible.builtin.fail:
     msg: "{{ oneagent_download_dir_contains_spaces }}"
-  when: oneagent_is_operation_installation and oneagent_download_path|regex_search(" ")
+  when: "oneagent_is_operation_installation and ' ' in oneagent_download_path"
 
 - name: Validate if download directory is available
   ansible.builtin.stat:

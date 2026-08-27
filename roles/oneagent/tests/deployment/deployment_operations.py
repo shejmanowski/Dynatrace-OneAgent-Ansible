@@ -4,10 +4,10 @@ import os
 from pathlib import Path
 from typing import Any, Callable, TypeVar, cast
 
-from tests.ansible.config import AnsibleConfigurator
-from tests.ansible.runner import AnsibleRunner
-from tests.command.platform_command_wrapper import PlatformCommandWrapper
-from tests.constants import (
+from ansible.config import AnsibleConfigurator
+from ansible.runner import AnsibleRunner
+from command.platform_command_wrapper import PlatformCommandWrapper
+from constants import (
     INSTALLER_CERTIFICATE_FILE_NAME,
     INSTALLER_PARTIAL_NAME,
     INSTALLER_SERVER_TOKEN,
@@ -19,7 +19,7 @@ from tests.constants import (
     WORK_INSTALLERS_DIR_PATH,
     WORK_SERVER_DIR_PATH,
 )
-from tests.deployment.deployment_platform import (
+from deployment.deployment_platform import (
     DeploymentPlatform,
     DeploymentResult,
     PlatformCollection,
@@ -165,6 +165,7 @@ def check_download_directory(
 ) -> None:
     logging.debug("Platform: %s, IP: %s", platform, address)
     download_path: Path = select_by_platform(platform, unix_path, windows_path)
-    installer_path = download_path / f"{INSTALLER_PARTIAL_NAME}*"
+    installer_glob = select_by_platform(platform, f"*/{INSTALLER_PARTIAL_NAME}*", f"{INSTALLER_PARTIAL_NAME}*")
+    installer_path = download_path / installer_glob
     assert wrapper.directory_exists(platform, address, download_path).returncode == 0
     assert wrapper.file_exists(platform, address, installer_path).returncode == (0 if exists else 1)

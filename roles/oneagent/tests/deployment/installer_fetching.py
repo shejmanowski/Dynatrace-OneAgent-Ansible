@@ -3,15 +3,15 @@ import subprocess
 from pathlib import Path
 
 import requests
-from tests.constants import (
+from constants import (
     INSTALLER_CERTIFICATE_FILE_NAME,
     INSTALLER_PRIVATE_KEY_FILE_NAME,
     INSTALLERS_DIR_PATH,
     WORK_INSTALLERS_DIR_PATH,
     InstallerVersion,
 )
-from tests.deployment.deployment_platform import DeploymentPlatform, PlatformCollection
-from tests.deployment.ssl_certificate_generator import (
+from deployment.deployment_platform import DeploymentPlatform, PlatformCollection
+from deployment.ssl_certificate_generator import (
     SSLCertificateGenerator,
     SSLCertificateInfo,
 )
@@ -46,7 +46,7 @@ def sign_installer(installer: list[str]) -> list[str]:
         check=False,
     )
     if proc.returncode != 0:
-        logging.error("Failed to sign installer: %s")
+        logging.error("Failed to sign installer: %s", proc.stdout)
         return []
 
     signed_installer = proc.stdout.splitlines()

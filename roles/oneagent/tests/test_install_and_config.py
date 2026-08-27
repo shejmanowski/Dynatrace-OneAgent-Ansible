@@ -1,15 +1,15 @@
 import logging
 from pathlib import Path
 
-from tests.ansible.config import AnsibleConfigurator
-from tests.ansible.runner import AnsibleRunner
-from tests.command.platform_command_wrapper import PlatformCommandWrapper
-from tests.constants import (
+from ansible.config import AnsibleConfigurator
+from ansible.runner import AnsibleRunner
+from command.platform_command_wrapper import PlatformCommandWrapper
+from constants import (
     INSTALLER_SERVER_TOKEN,
     UNIX_DOWNLOAD_DIR_PATH,
     WINDOWS_DOWNLOAD_DIR_PATH,
 )
-from tests.deployment.deployment_operations import (
+from deployment.deployment_operations import (
     check_agent_state,
     check_download_directory,
     get_oneagentctl_path,
@@ -18,7 +18,7 @@ from tests.deployment.deployment_operations import (
     run_deployment,
     set_installer_download_params,
 )
-from tests.deployment.deployment_platform import (
+from deployment.deployment_platform import (
     DeploymentPlatform,
     DeploymentResult,
     PlatformCollection,
@@ -75,6 +75,39 @@ def _check_output_for_secrets(result: DeploymentResult, installer_server_url: st
     for out in result:
         assert INSTALLER_SERVER_TOKEN not in out.stdout
         assert installer_server_url not in out.stderr
+
+
+def test_missing_download_directory(
+    runner: AnsibleRunner,
+    configurator: AnsibleConfigurator,
+    platforms: PlatformCollection,
+    wrapper: PlatformCommandWrapper,
+    installer_server_url: str,
+):
+    set_installer_download_params(configurator, installer_server_url)
+    configurator.set_common_parameter(configurator.VALIDATE_DOWNLOAD_CERTS_KEY, False)
+
+    unix_download_dir = UNIX_DOWNLOAD_DIR_PATH / "oneagent-missing-download-dir"
+    windows_download_dir = WINDOWS_DOWNLOAD_DIR_PATH / "oneagent-missing-download-dir"
+
+    for platform in platforms:
+        download_dir: Path = select_by_platform(platform, unix_download_dir, windows_download_dir)
+        configurator.set_platform_parameter(platform, configurator.DOWNLOAD_DIR_KEY, str(download_dir))
+
+    run_deployment(runner, configurator)
+
+    logging.info("Check if agent is installed")
+    perform_operation_on_platforms(platforms, check_agent_state, wrapper, True)
+
+    logging.info("Check if the missing download directory was created and the installer cleaned up")
+    perform_operation_on_platforms(
+        platforms,
+        check_download_directory,
+        wrapper,
+        False,
+        unix_download_dir,
+        windows_download_dir,
+    )
 
 
 def test_basic_installation(
